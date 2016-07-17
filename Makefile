@@ -14,6 +14,8 @@ NAME = Shuffling Zombie Juror
 # (this increases performance and avoids hard-to-debug behaviour);
 MAKEFLAGS += -rR
 
+ccflags-y += -I$(src)
+
 # Avoid funny character set dependencies
 unexport LC_ALL
 LC_COLLATE=C
