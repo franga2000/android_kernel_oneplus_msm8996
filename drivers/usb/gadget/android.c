@@ -56,6 +56,11 @@
 #include "f_ccid.c"
 #include "f_mtp.c"
 #include "f_accessory.c"
+
+#include "f_hid.h"
+#include "f_hid_android_keyboard.c"
+#include "f_hid_android_mouse.c"
+
 #include "f_charger.c"
 #define USB_ETH_RNDIS y
 #include "f_rndis.c"
@@ -3001,6 +3006,41 @@ static struct android_usb_function dpl_gsi_function = {
 	.bind_config	= dpl_gsi_function_bind_config,
 };
 
+static int hid_function_init(struct android_usb_function *f, struct usb_composite_dev *cdev)
+{
+	return ghid_setup(cdev->gadget, 2);
+}
+
+static void hid_function_cleanup(struct android_usb_function *f)
+{
+	ghid_cleanup();
+}
+
+static int hid_function_bind_config(struct android_usb_function *f, struct usb_configuration *c)
+{
+	int ret;
+	printk(KERN_INFO "hid keyboard\n");
+	ret = hidg_bind_config(c, &ghid_device_android_keyboard, 0);
+	if (ret) {
+		pr_info("%s: hid_function_bind_config keyboard failed: %d\n", __func__, ret);
+		return ret;
+	}
+	printk(KERN_INFO "hid mouse\n");
+	ret = hidg_bind_config(c, &ghid_device_android_mouse, 1);
+	if (ret) {
+		pr_info("%s: hid_function_bind_config mouse failed: %d\n", __func__, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static struct android_usb_function hid_function = {
+	.name		= "hid",
+	.init		= hid_function_init,
+	.cleanup	= hid_function_cleanup,
+	.bind_config	= hid_function_bind_config,
+};
+
 static struct android_usb_function *supported_functions[] = {
 	[ANDROID_FFS] = &ffs_function,
 	[ANDROID_MBIM_BAM] = &mbim_function,
@@ -3044,6 +3084,7 @@ static struct android_usb_function *default_functions[] = {
 	&audio_function,
 #endif
 	&rmnet_function,
+	&hid_function,
 	&gps_function,
 	&diag_function,
 	&qdss_function,
@@ -3351,6 +3392,8 @@ functions_show(struct device *pdev, struct device_attribute *attr, char *buf)
 					f_holder->f->name);
 	}
 
+	android_enable_function(dev, "hid");
+
 	mutex_unlock(&dev->mutex);
 
 	if (buff != buf)
@@ -3458,6 +3501,8 @@ functions_store(struct device *pdev, struct device_attribute *attr,
 	}
 
 	mutex_unlock(&dev->mutex);
+
+	android_enable_function(dev, "hid");
 
 	return size;
 }
