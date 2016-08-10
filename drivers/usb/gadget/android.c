@@ -3400,7 +3400,7 @@ functions_show(struct device *pdev, struct device_attribute *attr, char *buf)
 					f_holder->f->name);
 	}
 
-	android_enable_function(dev, "hid");
+	android_enable_function(dev, conf, "hid");
 
 	mutex_unlock(&dev->mutex);
 
@@ -3510,7 +3510,7 @@ functions_store(struct device *pdev, struct device_attribute *attr,
 
 	mutex_unlock(&dev->mutex);
 
-	android_enable_function(dev, "hid");
+	android_enable_function(dev, conf, "hid");
 
 	return size;
 }
