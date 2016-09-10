@@ -2376,6 +2376,7 @@ static int	synaptics_input_init(struct synaptics_ts_data *ts)
 	input_set_capability(ts->input_dev, EV_KEY, KEY_POWER);
 #endif
 #endif
+	set_bit(BTN_TOOL_FINGER, ts->input_dev->keybit);
 	/* For multi touch */
 	input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
 	input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, (ts->max_x-1), 0, 0);
@@ -4134,7 +4135,10 @@ static int fb_notifier_callback(struct notifier_block *self, unsigned long event
             {
                 TPD_DEBUG("%s going TP resume start\n", __func__);
                 ts->is_suspended = 0;
-				queue_delayed_work(get_base_report, &ts->base_work,msecs_to_jiffies(1));
+		if (ts->gesture_enable)
+			synaptics_enable_interrupt_for_gesture(ts, false);
+		atomic_set(&ts->is_stop, 0);
+		touch_enable(ts);
 				synaptics_ts_resume(&ts->client->dev);
                 //atomic_set(&ts->is_stop,0);
                 TPD_DEBUG("%s going TP resume end\n", __func__);
