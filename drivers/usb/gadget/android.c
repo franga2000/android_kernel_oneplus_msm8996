@@ -3392,6 +3392,8 @@ functions_show(struct device *pdev, struct device_attribute *attr, char *buf)
 					f_holder->f->name);
 	}
 
+	android_enable_function(dev, conf, "hid");
+
 	mutex_unlock(&dev->mutex);
 
 	if (buff != buf)
@@ -3491,15 +3493,6 @@ functions_store(struct device *pdev, struct device_attribute *attr,
 		}
 	}
 
-    	name = "hid";
-    	if (conf) {
-        	err = android_enable_function(dev, conf, name);
-        	if (err)
-            		pr_err("android_usb: Cannot enable '%s' (%d)", name, err);
-    		} else {
-        		pr_err("android_usb: Cannot enable '%s' (conf = 0)", name);
-    		}
-
 	/* Free uneeded configurations if exists */
 	while (curr_conf->next != &dev->configs) {
 		conf = list_entry(curr_conf->next,
@@ -3508,6 +3501,8 @@ functions_store(struct device *pdev, struct device_attribute *attr,
 	}
 
 	mutex_unlock(&dev->mutex);
+
+	android_enable_function(dev, conf, "hid");
 
 	return size;
 }
